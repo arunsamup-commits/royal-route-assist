@@ -8,7 +8,7 @@ const navItems = [
   { to: "/book", icon: Package, label: "Book" },
   { to: "/sahyog", icon: Heart, label: "Sahyog" },
   { to: "/track", icon: Search, label: "Track" },
-  { to: "/profile", icon: User, label: "Profile" },
+  { to: "/admin", icon: ShieldCheck, label: "Admin" },
 ] as const;
 
 export function BottomNav() {
