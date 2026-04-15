@@ -8,6 +8,7 @@ const navItems = [
   { to: "/book", icon: Package, label: "Book" },
   { to: "/sahyog", icon: Heart, label: "Sahyog" },
   { to: "/track", icon: Search, label: "Track" },
+  { to: "/profile", icon: User, label: "Profile" },
   { to: "/admin", icon: ShieldCheck, label: "Admin" },
 ] as const;
 
@@ -24,18 +25,18 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               className={cn(
-                "relative flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs transition-colors",
+                "relative flex flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="nav-indicator"
-                  className="absolute -top-1 h-0.5 w-6 rounded-full bg-primary"
+                  className="absolute -top-1 h-0.5 w-5 rounded-full bg-primary"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-4.5 w-4.5" />
               <span className="font-medium">{item.label}</span>
             </Link>
           );
