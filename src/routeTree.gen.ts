@@ -14,6 +14,7 @@ import { Route as SahyogRouteImport } from './routes/sahyog'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as CoolieDashboardRouteImport } from './routes/coolie-dashboard'
 import { Route as BookRouteImport } from './routes/book'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TrackRoute = TrackRouteImport.update({
@@ -41,6 +42,11 @@ const BookRoute = BookRouteImport.update({
   path: '/book',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -49,6 +55,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/book': typeof BookRoute
   '/coolie-dashboard': typeof CoolieDashboardRoute
   '/profile': typeof ProfileRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/book': typeof BookRoute
   '/coolie-dashboard': typeof CoolieDashboardRoute
   '/profile': typeof ProfileRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/book': typeof BookRoute
   '/coolie-dashboard': typeof CoolieDashboardRoute
   '/profile': typeof ProfileRoute
@@ -76,16 +85,25 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/book'
     | '/coolie-dashboard'
     | '/profile'
     | '/sahyog'
     | '/track'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/book' | '/coolie-dashboard' | '/profile' | '/sahyog' | '/track'
+  to:
+    | '/'
+    | '/admin'
+    | '/book'
+    | '/coolie-dashboard'
+    | '/profile'
+    | '/sahyog'
+    | '/track'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/book'
     | '/coolie-dashboard'
     | '/profile'
@@ -95,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   BookRoute: typeof BookRoute
   CoolieDashboardRoute: typeof CoolieDashboardRoute
   ProfileRoute: typeof ProfileRoute
@@ -139,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -151,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   BookRoute: BookRoute,
   CoolieDashboardRoute: CoolieDashboardRoute,
   ProfileRoute: ProfileRoute,

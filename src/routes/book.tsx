@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { GlassCard } from "@/components/GlassCard";
+import { bookingStore } from "@/lib/booking-store";
 import {
   Package,
   Camera,
@@ -13,6 +14,8 @@ import {
   Landmark,
   Plus,
   Minus,
+  CheckCircle,
+  X,
 } from "lucide-react";
 
 export const Route = createFileRoute("/book")({
@@ -28,16 +31,66 @@ export const Route = createFileRoute("/book")({
 const steps = ["Location", "Luggage", "Schedule", "Confirm"];
 
 function BookPage() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [bags, setBags] = useState(2);
   const [locationType, setLocationType] = useState<"train" | "platform" | null>(null);
+  const [stationName, setStationName] = useState("");
   const [scheduleType, setScheduleType] = useState<"now" | "pre" | null>(null);
+  const [arrivalTime, setArrivalTime] = useState("");
+  const [luggageImage, setLuggageImage] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState<{ otp: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const next = () => setStep((s) => Math.min(s + 1, 3));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setLuggageImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleConfirm = () => {
+    if (!locationType || !scheduleType) return;
+    const booking = bookingStore.addBooking({
+      locationType,
+      stationName,
+      bags,
+      scheduleType,
+      arrivalTime: arrivalTime || undefined,
+      luggageImage: luggageImage || undefined,
+    });
+    setConfirmed({ otp: booking.otp });
+  };
+
+  if (confirmed) {
+    return (
+      <div className="mx-auto max-w-md px-4 pt-20 text-center">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+          <CheckCircle className="mx-auto mb-4 h-16 w-16 text-success" />
+        </motion.div>
+        <h2 className="mb-2 text-2xl font-bold">Booking Confirmed!</h2>
+        <p className="mb-4 text-sm text-muted-foreground">Share this OTP with your coolie</p>
+        <GlassCard className="mx-auto mb-6 inline-block px-8 py-4">
+          <p className="font-mono text-4xl font-bold tracking-[0.3em] text-primary">{confirmed.otp}</p>
+        </GlassCard>
+        <div className="flex justify-center gap-3">
+          <button onClick={() => navigate({ to: "/track" })} className="btn-primary-glow px-5 py-2.5 text-sm">
+            Track Booking
+          </button>
+          <button onClick={() => navigate({ to: "/" })} className="glass-card px-5 py-2.5 text-sm font-semibold">
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-md px-4 pt-8">
+    <div className="mx-auto max-w-md px-4 pt-8 pb-24">
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
         <h1 className="text-2xl font-bold">Book Assistance</h1>
@@ -50,9 +103,7 @@ function BookPage() {
           <div key={s} className="flex flex-1 items-center gap-2">
             <div
               className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                i <= step
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
+                i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               }`}
             >
               {i + 1}
@@ -95,6 +146,8 @@ function BookPage() {
                 <input
                   type="text"
                   placeholder="e.g. New Delhi Railway Station"
+                  value={stationName}
+                  onChange={(e) => setStationName(e.target.value)}
                   className="glass-input w-full px-4 py-3 text-sm"
                 />
               </motion.div>
@@ -124,11 +177,36 @@ function BookPage() {
               </div>
             </GlassCard>
 
-            <GlassCard hover className="cursor-pointer text-center">
-              <Camera className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-semibold">Upload Luggage Photo</p>
-              <p className="text-xs text-muted-foreground">Tap to capture or select</p>
-            </GlassCard>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+
+            {luggageImage ? (
+              <GlassCard className="relative">
+                <button
+                  onClick={() => setLuggageImage(null)}
+                  className="absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+                <img src={luggageImage} alt="Luggage" className="w-full rounded-lg object-cover max-h-40" />
+              </GlassCard>
+            ) : (
+              <GlassCard
+                hover
+                className="cursor-pointer text-center"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm font-semibold">Upload Luggage Photo</p>
+                <p className="text-xs text-muted-foreground">Tap to capture or select</p>
+              </GlassCard>
+            )}
           </motion.div>
         )}
 
@@ -166,7 +244,12 @@ function BookPage() {
             {scheduleType === "pre" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
                 <label className="mb-1.5 block text-sm font-semibold">Train arrival time</label>
-                <input type="time" className="glass-input w-full px-4 py-3 text-sm" />
+                <input
+                  type="time"
+                  value={arrivalTime}
+                  onChange={(e) => setArrivalTime(e.target.value)}
+                  className="glass-input w-full px-4 py-3 text-sm"
+                />
               </motion.div>
             )}
           </motion.div>
@@ -182,6 +265,11 @@ function BookPage() {
               </div>
               <div className="h-px bg-border" />
               <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Station</span>
+                <span className="text-sm font-semibold">{stationName || "—"}</span>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Bags</span>
                 <span className="text-sm font-semibold">{bags}</span>
               </div>
@@ -190,6 +278,15 @@ function BookPage() {
                 <span className="text-xs text-muted-foreground">Schedule</span>
                 <span className="text-sm font-semibold capitalize">{scheduleType === "pre" ? "Pre-booked" : "Instant"}</span>
               </div>
+              {luggageImage && (
+                <>
+                  <div className="h-px bg-border" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Photo</span>
+                    <img src={luggageImage} alt="Luggage" className="h-10 w-10 rounded-md object-cover" />
+                  </div>
+                </>
+              )}
               <div className="h-px bg-border" />
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Est. Cost</span>
@@ -200,7 +297,7 @@ function BookPage() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               className="btn-primary-glow mt-5 w-full py-3.5 text-sm"
-              onClick={() => alert("Booking confirmed! Your OTP is 4829")}
+              onClick={handleConfirm}
             >
               <Package className="mr-2 inline h-4 w-4" />
               Confirm & Book
