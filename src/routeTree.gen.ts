@@ -9,8 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrackRouteImport } from './routes/track'
+import { Route as SahyogRouteImport } from './routes/sahyog'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as CoolieDashboardRouteImport } from './routes/coolie-dashboard'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SahyogRoute = SahyogRouteImport.update({
+  id: '/sahyog',
+  path: '/sahyog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoolieDashboardRoute = CoolieDashboardRouteImport.update({
+  id: '/coolie-dashboard',
+  path: '/coolie-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +49,96 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
+  '/coolie-dashboard': typeof CoolieDashboardRoute
+  '/profile': typeof ProfileRoute
+  '/sahyog': typeof SahyogRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
+  '/coolie-dashboard': typeof CoolieDashboardRoute
+  '/profile': typeof ProfileRoute
+  '/sahyog': typeof SahyogRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/book': typeof BookRoute
+  '/coolie-dashboard': typeof CoolieDashboardRoute
+  '/profile': typeof ProfileRoute
+  '/sahyog': typeof SahyogRoute
+  '/track': typeof TrackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/book'
+    | '/coolie-dashboard'
+    | '/profile'
+    | '/sahyog'
+    | '/track'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/book' | '/coolie-dashboard' | '/profile' | '/sahyog' | '/track'
+  id:
+    | '__root__'
+    | '/'
+    | '/book'
+    | '/coolie-dashboard'
+    | '/profile'
+    | '/sahyog'
+    | '/track'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookRoute: typeof BookRoute
+  CoolieDashboardRoute: typeof CoolieDashboardRoute
+  ProfileRoute: typeof ProfileRoute
+  SahyogRoute: typeof SahyogRoute
+  TrackRoute: typeof TrackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sahyog': {
+      id: '/sahyog'
+      path: '/sahyog'
+      fullPath: '/sahyog'
+      preLoaderRoute: typeof SahyogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coolie-dashboard': {
+      id: '/coolie-dashboard'
+      path: '/coolie-dashboard'
+      fullPath: '/coolie-dashboard'
+      preLoaderRoute: typeof CoolieDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +151,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookRoute: BookRoute,
+  CoolieDashboardRoute: CoolieDashboardRoute,
+  ProfileRoute: ProfileRoute,
+  SahyogRoute: SahyogRoute,
+  TrackRoute: TrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
