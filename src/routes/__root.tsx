@@ -31,8 +31,11 @@ export const Route = createRootRoute({
       { title: "Coolie — Smart Railway Luggage Assistance" },
       { name: "description", content: "Book luggage assistance at Indian railway stations. Smart, safe, and social." },
       { property: "og:title", content: "Coolie — Smart Railway Luggage Assistance" },
-      { property: "og:description", content: "Book luggage assistance at Indian railway stations." },
+      { property: "og:description", content: "Book luggage assistance at Indian railway stations. Smart, safe, and social." },
       { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Coolie — Smart Railway Luggage Assistance" },
+      { name: "twitter:description", content: "Book luggage assistance at Indian railway stations. Smart, safe, and social." },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
