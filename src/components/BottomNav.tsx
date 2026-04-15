@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Search, Heart, User, Package } from "lucide-react";
+import { Home, Search, Heart, User, Package, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ const navItems = [
   { to: "/book", icon: Package, label: "Book" },
   { to: "/sahyog", icon: Heart, label: "Sahyog" },
   { to: "/track", icon: Search, label: "Track" },
-  { to: "/profile", icon: User, label: "Profile" },
+  { to: "/admin", icon: ShieldCheck, label: "Admin" },
 ] as const;
 
 export function BottomNav() {
