@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { GlassCard } from "@/components/GlassCard";
-import { useBookings, bookingStore, type Booking } from "@/lib/booking-store";
+import { useBookings, useCoolies, bookingStore, type Booking, type CoolieProfile } from "@/lib/booking-store";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -14,6 +14,11 @@ import {
   X,
   Train,
   Landmark,
+  Star,
+  Award,
+  Users,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -28,6 +33,8 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const bookings = useBookings();
+  const coolies = useCoolies();
+  const [tab, setTab] = useState<"bookings" | "coolies">("bookings");
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [coolieInput, setCoolieInput] = useState("");
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -43,6 +50,9 @@ function AdminPage() {
     }
   };
 
+  // Sort coolies by most accepted
+  const sortedCoolies = [...coolies].sort((a, b) => b.totalAccepted - a.totalAccepted);
+
   return (
     <div className="mx-auto max-w-md px-4 pt-8 pb-24">
       {/* Header */}
@@ -53,13 +63,13 @@ function AdminPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Admin Panel</h1>
-            <p className="text-sm text-muted-foreground">Live Booking Management</p>
+            <p className="text-sm text-muted-foreground">Manage bookings & coolies</p>
           </div>
         </div>
       </motion.div>
 
       {/* Stats Row */}
-      <div className="mb-6 grid grid-cols-3 gap-3">
+      <div className="mb-4 grid grid-cols-3 gap-3">
         <GlassCard className="p-3 text-center">
           <p className="text-2xl font-bold">{bookings.length}</p>
           <p className="text-xs text-muted-foreground">Total</p>
@@ -74,36 +84,75 @@ function AdminPage() {
         </GlassCard>
       </div>
 
-      {/* Bookings List */}
-      {bookings.length === 0 ? (
-        <GlassCard className="py-12 text-center">
-          <Package className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">No bookings yet</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">
-            Bookings from /book will appear here in real-time
-          </p>
-        </GlassCard>
+      {/* Tabs */}
+      <div className="mb-4 flex gap-2">
+        <button
+          onClick={() => setTab("bookings")}
+          className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition ${
+            tab === "bookings" ? "btn-primary-glow" : "glass-card text-muted-foreground"
+          }`}
+        >
+          <Package className="mr-1.5 inline h-4 w-4" /> Bookings
+        </button>
+        <button
+          onClick={() => setTab("coolies")}
+          className={`flex-1 rounded-xl py-2.5 text-sm font-semibold transition ${
+            tab === "coolies" ? "btn-primary-glow" : "glass-card text-muted-foreground"
+          }`}
+        >
+          <Users className="mr-1.5 inline h-4 w-4" /> Coolies
+        </button>
+      </div>
+
+      {tab === "bookings" ? (
+        /* ─── Bookings Tab ─── */
+        bookings.length === 0 ? (
+          <GlassCard className="py-12 text-center">
+            <Package className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">No bookings yet</p>
+            <p className="mt-1 text-xs text-muted-foreground/70">
+              Bookings from /book will appear here
+            </p>
+          </GlassCard>
+        ) : (
+          <div className="space-y-3">
+            <AnimatePresence>
+              {bookings.map((booking) => {
+                const assignedCoolie = booking.assignedCoolieId
+                  ? coolies.find((c) => c.id === booking.assignedCoolieId)
+                  : null;
+                return (
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    assignedCoolie={assignedCoolie || null}
+                    isAssigning={assigningId === booking.id}
+                    coolieInput={coolieInput}
+                    onStartAssign={() => { setAssigningId(booking.id); setCoolieInput(""); }}
+                    onCancelAssign={() => setAssigningId(null)}
+                    onCoolieInputChange={setCoolieInput}
+                    onConfirmAssign={() => handleAssign(booking.id)}
+                    onCancel={() => bookingStore.cancelBooking(booking.id)}
+                    onImageClick={(src) => setLightboxImage(src)}
+                  />
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )
       ) : (
+        /* ─── Coolies Tab ─── */
         <div className="space-y-3">
-          <AnimatePresence>
-            {bookings.map((booking) => (
-              <BookingCard
-                key={booking.id}
-                booking={booking}
-                isAssigning={assigningId === booking.id}
-                coolieInput={coolieInput}
-                onStartAssign={() => {
-                  setAssigningId(booking.id);
-                  setCoolieInput("");
-                }}
-                onCancelAssign={() => setAssigningId(null)}
-                onCoolieInputChange={setCoolieInput}
-                onConfirmAssign={() => handleAssign(booking.id)}
-                onCancel={() => bookingStore.cancelBooking(booking.id)}
-                onImageClick={(src) => setLightboxImage(src)}
-              />
-            ))}
-          </AnimatePresence>
+          {sortedCoolies.map((coolie, i) => (
+            <motion.div
+              key={coolie.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <CoolieCard coolie={coolie} rank={i + 1} />
+            </motion.div>
+          ))}
         </div>
       )}
 
@@ -130,11 +179,7 @@ function AdminPage() {
               >
                 <X className="h-4 w-4" />
               </button>
-              <img
-                src={lightboxImage}
-                alt="Luggage"
-                className="max-h-[80vh] rounded-xl object-contain"
-              />
+              <img src={lightboxImage} alt="Luggage" className="max-h-[80vh] rounded-xl object-contain" />
             </motion.div>
           </motion.div>
         )}
@@ -143,9 +188,58 @@ function AdminPage() {
   );
 }
 
+/* ─── Coolie Card (Admin View) ─── */
+function CoolieCard({ coolie, rank }: { coolie: CoolieProfile; rank: number }) {
+  const acceptRate = coolie.totalAccepted + coolie.totalRejected > 0
+    ? Math.round((coolie.totalAccepted / (coolie.totalAccepted + coolie.totalRejected)) * 100)
+    : 0;
+
+  return (
+    <GlassCard className="flex items-center gap-3">
+      <div className="relative">
+        <img
+          src={coolie.photo}
+          alt={coolie.name}
+          className="h-12 w-12 rounded-full border border-glass-border bg-muted"
+        />
+        {rank <= 3 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-warning text-[10px] font-bold text-black">
+            {rank}
+          </span>
+        )}
+      </div>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-bold">{coolie.name}</p>
+          {coolie.isOnline && <span className="h-2 w-2 rounded-full bg-success" />}
+        </div>
+        <p className="text-xs text-muted-foreground">{coolie.id} · {coolie.station}</p>
+        <div className="mt-1 flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-0.5 text-warning">
+            <Star className="h-3 w-3" /> {coolie.rating}
+          </span>
+          <span className="flex items-center gap-0.5 text-primary">
+            <Award className="h-3 w-3" /> {coolie.badge}
+          </span>
+        </div>
+      </div>
+      <div className="text-right text-xs">
+        <div className="flex items-center gap-1 text-success">
+          <TrendingUp className="h-3 w-3" /> {coolie.totalAccepted}
+        </div>
+        <div className="flex items-center gap-1 text-destructive">
+          <TrendingDown className="h-3 w-3" /> {coolie.totalRejected}
+        </div>
+        <p className="mt-0.5 text-muted-foreground">{acceptRate}% rate</p>
+      </div>
+    </GlassCard>
+  );
+}
+
 /* ─── Booking Card ─── */
 interface BookingCardProps {
   booking: Booking;
+  assignedCoolie: CoolieProfile | null;
   isAssigning: boolean;
   coolieInput: string;
   onStartAssign: () => void;
@@ -158,11 +252,12 @@ interface BookingCardProps {
 
 function BookingCard({
   booking,
+  assignedCoolie,
   isAssigning,
   coolieInput,
+  onCoolieInputChange,
   onStartAssign,
   onCancelAssign,
-  onCoolieInputChange,
   onConfirmAssign,
   onCancel,
   onImageClick,
@@ -173,20 +268,11 @@ function BookingCard({
     completed: "bg-primary/20 text-primary",
     cancelled: "bg-destructive/20 text-destructive",
   };
-
   const timeAgo = getTimeAgo(booking.createdAt);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-    >
-      <GlassCard
-        className={`relative overflow-hidden ${booking.needsAdminAttention ? "!border-destructive/60 ring-1 ring-destructive/30" : ""}`}
-      >
-        {/* Admin Attention Flag */}
+    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+      <GlassCard className={`relative overflow-hidden ${booking.needsAdminAttention ? "!border-destructive/60 ring-1 ring-destructive/30" : ""}`}>
         {booking.needsAdminAttention && (
           <div className="mb-3 flex items-center gap-2 rounded-lg bg-destructive/15 px-3 py-1.5">
             <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
@@ -194,7 +280,6 @@ function BookingCard({
           </div>
         )}
 
-        {/* Top row: status + time */}
         <div className="mb-3 flex items-center justify-between">
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${statusColors[booking.status]}`}>
             {booking.status}
@@ -204,19 +289,10 @@ function BookingCard({
           </span>
         </div>
 
-        {/* Info row */}
         <div className="mb-3 flex items-start gap-3">
-          {/* Luggage thumbnail */}
           {booking.luggageImage ? (
-            <button
-              onClick={() => onImageClick(booking.luggageImage!)}
-              className="shrink-0 overflow-hidden rounded-lg border border-glass-border"
-            >
-              <img
-                src={booking.luggageImage}
-                alt="Luggage"
-                className="h-14 w-14 object-cover transition hover:scale-110"
-              />
+            <button onClick={() => onImageClick(booking.luggageImage!)} className="shrink-0 overflow-hidden rounded-lg border border-glass-border">
+              <img src={booking.luggageImage} alt="Luggage" className="h-14 w-14 object-cover transition hover:scale-110" />
             </button>
           ) : (
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-muted/30">
@@ -224,57 +300,43 @@ function BookingCard({
             </div>
           )}
           <div className="flex-1 space-y-1">
-            <div className="flex items-center gap-1.5 text-sm font-semibold">
-              {booking.locationType === "train" ? (
-                <Train className="h-3.5 w-3.5 text-primary" />
-              ) : (
-                <Landmark className="h-3.5 w-3.5 text-accent" />
-              )}
+            <p className="text-sm font-semibold">{booking.passengerName}</p>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              {booking.locationType === "train" ? <Train className="h-3 w-3 text-primary" /> : <Landmark className="h-3 w-3 text-accent" />}
               {booking.stationName || "Unknown Station"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {booking.bags} bag{booking.bags !== 1 ? "s" : ""} · ₹{booking.estimatedCost} ·{" "}
-              {booking.scheduleType === "pre" ? "Pre-booked" : "Instant"}
+              {booking.bags} bags · ₹{booking.estimatedCost} · {booking.scheduleType === "pre" ? "Pre-booked" : "Instant"}
             </p>
             <p className="text-xs text-muted-foreground">OTP: <span className="font-mono font-bold text-primary">{booking.otp}</span></p>
-            {booking.assignedCoolieId && (
-              <p className="text-xs text-success font-semibold">Coolie: {booking.assignedCoolieId}</p>
-            )}
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Assigned Coolie Profile */}
+        {assignedCoolie && (
+          <div className="mb-3 flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2">
+            <img src={assignedCoolie.photo} alt={assignedCoolie.name} className="h-8 w-8 rounded-full border border-glass-border bg-muted" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold">{assignedCoolie.name}</p>
+              <p className="text-xs text-muted-foreground">{assignedCoolie.id} · <Star className="inline h-3 w-3 text-warning" /> {assignedCoolie.rating}</p>
+            </div>
+          </div>
+        )}
+
         {booking.status === "pending" && (
           <div className="space-y-2">
             {isAssigning ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Coolie ID"
-                  value={coolieInput}
-                  onChange={(e) => onCoolieInputChange(e.target.value)}
-                  className="glass-input flex-1 px-3 py-2 text-sm"
-                  autoFocus
-                />
-                <button onClick={onConfirmAssign} className="btn-primary-glow px-3 py-2 text-xs">
-                  Assign
-                </button>
-                <button onClick={onCancelAssign} className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold">
-                  Cancel
-                </button>
+                <input type="text" placeholder="Coolie ID (e.g. CL-1001)" value={coolieInput} onChange={(e) => onCoolieInputChange(e.target.value)} className="glass-input flex-1 px-3 py-2 text-sm" autoFocus />
+                <button onClick={onConfirmAssign} className="btn-primary-glow px-3 py-2 text-xs">Assign</button>
+                <button onClick={onCancelAssign} className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold">Cancel</button>
               </motion.div>
             ) : (
               <div className="flex gap-2">
-                <button
-                  onClick={onStartAssign}
-                  className="btn-primary-glow flex flex-1 items-center justify-center gap-1.5 py-2 text-xs"
-                >
+                <button onClick={onStartAssign} className="btn-primary-glow flex flex-1 items-center justify-center gap-1.5 py-2 text-xs">
                   <UserCheck className="h-3.5 w-3.5" /> Manual Assign
                 </button>
-                <button
-                  onClick={onCancel}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-destructive/15 py-2 text-xs font-semibold text-destructive transition hover:bg-destructive/25"
-                >
+                <button onClick={onCancel} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-destructive/15 py-2 text-xs font-semibold text-destructive transition hover:bg-destructive/25">
                   <XCircle className="h-3.5 w-3.5" /> Cancel
                 </button>
               </div>
