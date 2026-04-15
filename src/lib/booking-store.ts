@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
 export interface CoolieProfile {
   id: string;
   name: string;
-  photo: string; // URL or placeholder
+  photo: string;
   station: string;
   badge: string;
   rating: number;
@@ -13,6 +13,25 @@ export interface CoolieProfile {
   totalRejected: number;
   totalCompleted: number;
   isOnline: boolean;
+  mobile?: string;
+  experienceYears?: number;
+  availableFrom?: string;
+  availableTo?: string;
+}
+
+/* ─── Coolie Application ─── */
+export interface CoolieApplication {
+  id: string;
+  name: string;
+  mobile: string;
+  station: string;
+  experienceYears: number;
+  availableFrom: string;
+  availableTo: string;
+  photo?: string;
+  bankPassbook?: string;
+  status: "pending" | "accepted" | "declined";
+  createdAt: number;
 }
 
 /* ─── Booking ─── */
@@ -31,6 +50,11 @@ export interface Booking {
   createdAt: number;
   needsAdminAttention: boolean;
   passengerName: string;
+  passengerMobile: string;
+  trainName?: string;
+  trainNumber?: string;
+  seatNumber?: string;
+  coachNumber?: string;
 }
 
 /* ─── Mock Coolies ─── */
@@ -46,6 +70,7 @@ const MOCK_COOLIES: CoolieProfile[] = [
     totalRejected: 8,
     totalCompleted: 138,
     isOnline: true,
+    mobile: "9876543210",
   },
   {
     id: "CL-1002",
@@ -58,6 +83,7 @@ const MOCK_COOLIES: CoolieProfile[] = [
     totalRejected: 12,
     totalCompleted: 82,
     isOnline: true,
+    mobile: "9876543211",
   },
   {
     id: "CL-1003",
@@ -70,6 +96,7 @@ const MOCK_COOLIES: CoolieProfile[] = [
     totalRejected: 15,
     totalCompleted: 50,
     isOnline: false,
+    mobile: "9876543212",
   },
   {
     id: "CL-1004",
@@ -82,6 +109,7 @@ const MOCK_COOLIES: CoolieProfile[] = [
     totalRejected: 5,
     totalCompleted: 205,
     isOnline: true,
+    mobile: "9876543213",
   },
   {
     id: "CL-1005",
@@ -94,13 +122,15 @@ const MOCK_COOLIES: CoolieProfile[] = [
     totalRejected: 10,
     totalCompleted: 90,
     isOnline: true,
+    mobile: "9876543214",
   },
 ];
 
 /* ─── Store State ─── */
 let bookings: Booking[] = [];
 let coolies: CoolieProfile[] = [...MOCK_COOLIES];
-let activeCoolieId: string | null = null; // simulates logged-in coolie
+let coolieApplications: CoolieApplication[] = [];
+let activeCoolieId: string | null = null;
 let listeners: Set<() => void> = new Set();
 
 function emitChange() {
@@ -118,7 +148,7 @@ export const bookingStore = {
   subscribe,
 
   addBooking: (
-    data: Omit<Booking, "id" | "otp" | "status" | "createdAt" | "needsAdminAttention" | "estimatedCost" | "passengerName"> & { passengerName?: string }
+    data: Omit<Booking, "id" | "otp" | "status" | "createdAt" | "needsAdminAttention" | "estimatedCost">
   ) => {
     const otp = String(Math.floor(1000 + Math.random() * 9000));
     const booking: Booking = {
@@ -129,12 +159,10 @@ export const bookingStore = {
       estimatedCost: data.bags * 50,
       createdAt: Date.now(),
       needsAdminAttention: false,
-      passengerName: data.passengerName || "Passenger",
     };
     bookings = [booking, ...bookings];
     emitChange();
 
-    // After 2 minutes, flag for admin attention if still pending
     setTimeout(() => {
       const current = bookings.find((b) => b.id === booking.id);
       if (current && current.status === "pending") {
@@ -154,7 +182,6 @@ export const bookingStore = {
         ? { ...b, status: "assigned", assignedCoolieId: coolieId, needsAdminAttention: false }
         : b
     );
-    // Increment coolie accepted count
     coolies = coolies.map((c) =>
       c.id === coolieId ? { ...c, totalAccepted: c.totalAccepted + 1 } : c
     );
@@ -174,7 +201,6 @@ export const bookingStore = {
   },
 
   rejectBooking: (bookingId: string, coolieId: string) => {
-    // Coolie rejects — booking stays pending for others
     coolies = coolies.map((c) =>
       c.id === coolieId ? { ...c, totalRejected: c.totalRejected + 1 } : c
     );
@@ -216,6 +242,65 @@ export const coolieStore = {
   },
 
   getAllCoolies: () => coolies,
+
+  searchByStation: (query: string) => {
+    if (!query.trim()) return coolies.filter((c) => c.isOnline);
+    const q = query.toLowerCase();
+    return coolies.filter(
+      (c) => c.isOnline && (c.station.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q))
+    );
+  },
+};
+
+/* ─── Coolie Application Store ─── */
+export const applicationStore = {
+  getSnapshot: () => coolieApplications,
+  subscribe,
+
+  addApplication: (data: Omit<CoolieApplication, "id" | "status" | "createdAt">) => {
+    const app: CoolieApplication = {
+      ...data,
+      id: crypto.randomUUID(),
+      status: "pending",
+      createdAt: Date.now(),
+    };
+    coolieApplications = [app, ...coolieApplications];
+    emitChange();
+    return app;
+  },
+
+  acceptApplication: (appId: string) => {
+    const app = coolieApplications.find((a) => a.id === appId);
+    if (!app) return;
+    coolieApplications = coolieApplications.map((a) =>
+      a.id === appId ? { ...a, status: "accepted" } : a
+    );
+    const newCoolie: CoolieProfile = {
+      id: `CL-${1006 + coolies.length}`,
+      name: app.name,
+      photo: app.photo || `https://api.dicebear.com/9.x/adventurer/svg?seed=${app.name.replace(/\s/g, "")}`,
+      station: app.station,
+      badge: "Bronze",
+      rating: 0,
+      totalAccepted: 0,
+      totalRejected: 0,
+      totalCompleted: 0,
+      isOnline: true,
+      mobile: app.mobile,
+      experienceYears: app.experienceYears,
+      availableFrom: app.availableFrom,
+      availableTo: app.availableTo,
+    };
+    coolies = [...coolies, newCoolie];
+    emitChange();
+  },
+
+  declineApplication: (appId: string) => {
+    coolieApplications = coolieApplications.map((a) =>
+      a.id === appId ? { ...a, status: "declined" } : a
+    );
+    emitChange();
+  },
 };
 
 /* ─── Hooks ─── */
@@ -233,4 +318,8 @@ export function useActiveCoolieId() {
     coolieStore.getActiveCoolieId,
     coolieStore.getActiveCoolieId
   );
+}
+
+export function useCoolieApplications() {
+  return useSyncExternalStore(subscribe, applicationStore.getSnapshot, applicationStore.getSnapshot);
 }
