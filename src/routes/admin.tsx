@@ -48,8 +48,15 @@ function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState(false);
+  const bookings = useBookings();
+  const coolies = useCoolies();
+  const applications = useCoolieApplications();
+  const [tab, setTab] = useState<"bookings" | "coolies" | "applications">("bookings");
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [coolieInput, setCoolieInput] = useState("");
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
-  const ADMIN_PIN = "7890"; // Temporary client-side gate — replace with server auth when Cloud is enabled
+  const ADMIN_PIN = "7890";
 
   if (!authenticated) {
     return (
@@ -88,14 +95,6 @@ function AdminPage() {
       </div>
     );
   }
-
-  const bookings = useBookings();
-  const coolies = useCoolies();
-  const applications = useCoolieApplications();
-  const [tab, setTab] = useState<"bookings" | "coolies" | "applications">("bookings");
-  const [assigningId, setAssigningId] = useState<string | null>(null);
-  const [coolieInput, setCoolieInput] = useState("");
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const pendingCount = bookings.filter((b) => b.status === "pending").length;
   const attentionCount = bookings.filter((b) => b.needsAdminAttention).length;
