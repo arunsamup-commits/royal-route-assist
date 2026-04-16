@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { validateCoolieApplication, sanitizeInput, LIMITS, type ValidationError } from "@/lib/validation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { GlassCard } from "@/components/GlassCard";

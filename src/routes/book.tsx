@@ -272,15 +272,16 @@ function BookPage() {
             {locationType && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <MapPin className="h-3 w-3" /> Station Name
+                  <MapPin className="h-3 w-3" /> Station Name *
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. New Delhi Railway Station"
                   value={stationName}
-                  onChange={(e) => setStationName(e.target.value)}
-                  className="glass-input w-full px-4 py-3 text-sm"
+                  onChange={(e) => setStationName(sanitizeInput(e.target.value, LIMITS.STATION_MAX))}
+                  className={`glass-input w-full px-4 py-3 text-sm ${getError("stationName") ? "!border-destructive" : ""}`}
                 />
+                {getError("stationName") && <p className="mt-1 text-xs text-destructive">{getError("stationName")}</p>}
               </motion.div>
             )}
           </motion.div>
