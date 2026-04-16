@@ -150,15 +150,21 @@ export const bookingStore = {
   addBooking: (
     data: Omit<Booking, "id" | "otp" | "status" | "createdAt" | "needsAdminAttention" | "estimatedCost">
   ) => {
+    // Enforce limits at store level
+    const sanitizedBags = Math.max(1, Math.min(10, Math.floor(data.bags)));
     const array = new Uint32Array(1);
     crypto.getRandomValues(array);
     const otp = String(1000 + (array[0] % 9000));
     const booking: Booking = {
       ...data,
+      bags: sanitizedBags,
+      passengerName: (data.passengerName || "Passenger").slice(0, 100).trim(),
+      passengerMobile: (data.passengerMobile || "").replace(/\D/g, "").slice(0, 10),
+      stationName: (data.stationName || "").slice(0, 100).trim(),
       id: crypto.randomUUID(),
       otp,
       status: "pending",
-      estimatedCost: data.bags * 50,
+      estimatedCost: sanitizedBags * 50,
       createdAt: Date.now(),
       needsAdminAttention: false,
     };

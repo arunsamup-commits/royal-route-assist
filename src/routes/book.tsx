@@ -4,6 +4,13 @@ import { useState, useRef } from "react";
 import { GlassCard } from "@/components/GlassCard";
 import { bookingStore } from "@/lib/booking-store";
 import {
+  validateBookingStep0,
+  validateBookingStep1,
+  sanitizeInput,
+  LIMITS,
+  type ValidationError,
+} from "@/lib/validation";
+import {
   Package,
   Camera,
   MapPin,
@@ -53,8 +60,24 @@ function BookPage() {
   const [seatNumber, setSeatNumber] = useState("");
   const [coachNumber, setCoachNumber] = useState("");
 
-  const next = () => setStep((s) => Math.min(s + 1, 4));
-  const prev = () => setStep((s) => Math.max(s - 1, 0));
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+
+  const getError = (field: string) => errors.find((e) => e.field === field)?.message;
+
+  const next = () => {
+    let stepErrors: ValidationError[] = [];
+    if (step === 0) {
+      stepErrors = validateBookingStep0({ passengerName, passengerMobile, trainName, trainNumber, coachNumber, seatNumber });
+    } else if (step === 1) {
+      stepErrors = validateBookingStep1({ locationType, stationName });
+    } else if (step === 3 && !scheduleType) {
+      stepErrors = [{ field: "scheduleType", message: "Select a schedule" }];
+    }
+    setErrors(stepErrors);
+    if (stepErrors.length > 0) return;
+    setStep((s) => Math.min(s + 1, 4));
+  };
+  const prev = () => { setErrors([]); setStep((s) => Math.max(s - 1, 0)); };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,9 +168,10 @@ function BookPage() {
                   type="text"
                   placeholder="Enter your name"
                   value={passengerName}
-                  onChange={(e) => setPassengerName(e.target.value)}
-                  className="glass-input w-full px-4 py-3 text-sm"
+                  onChange={(e) => setPassengerName(sanitizeInput(e.target.value, LIMITS.NAME_MAX))}
+                  className={`glass-input w-full px-4 py-3 text-sm ${getError("passengerName") ? "!border-destructive" : ""}`}
                 />
+                {getError("passengerName") && <p className="mt-1 text-xs text-destructive">{getError("passengerName")}</p>}
               </div>
               <div>
                 <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -157,10 +181,11 @@ function BookPage() {
                   type="tel"
                   placeholder="10-digit mobile number"
                   value={passengerMobile}
-                  onChange={(e) => setPassengerMobile(e.target.value)}
-                  className="glass-input w-full px-4 py-3 text-sm"
+                  onChange={(e) => setPassengerMobile(e.target.value.replace(/\D/g, "").slice(0, LIMITS.MOBILE_LENGTH))}
+                  className={`glass-input w-full px-4 py-3 text-sm ${getError("passengerMobile") ? "!border-destructive" : ""}`}
                   maxLength={10}
                 />
+                {getError("passengerMobile") && <p className="mt-1 text-xs text-destructive">{getError("passengerMobile")}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -171,9 +196,10 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. Rajdhani"
                     value={trainName}
-                    onChange={(e) => setTrainName(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setTrainName(sanitizeInput(e.target.value, LIMITS.TRAIN_NAME_MAX))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("trainName") ? "!border-destructive" : ""}`}
                   />
+                  {getError("trainName") && <p className="mt-1 text-xs text-destructive">{getError("trainName")}</p>}
                 </div>
                 <div>
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -183,9 +209,10 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. 12301"
                     value={trainNumber}
-                    onChange={(e) => setTrainNumber(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setTrainNumber(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("trainNumber") ? "!border-destructive" : ""}`}
                   />
+                  {getError("trainNumber") && <p className="mt-1 text-xs text-destructive">{getError("trainNumber")}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -197,8 +224,8 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. B3"
                     value={coachNumber}
-                    onChange={(e) => setCoachNumber(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setCoachNumber(sanitizeInput(e.target.value, LIMITS.COACH_MAX))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("coachNumber") ? "!border-destructive" : ""}`}
                   />
                 </div>
                 <div>
@@ -209,8 +236,8 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. 42"
                     value={seatNumber}
-                    onChange={(e) => setSeatNumber(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setSeatNumber(sanitizeInput(e.target.value, LIMITS.SEAT_MAX))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("seatNumber") ? "!border-destructive" : ""}`}
                   />
                 </div>
               </div>
@@ -245,15 +272,16 @@ function BookPage() {
             {locationType && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
                 <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <MapPin className="h-3 w-3" /> Station Name
+                  <MapPin className="h-3 w-3" /> Station Name *
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. New Delhi Railway Station"
                   value={stationName}
-                  onChange={(e) => setStationName(e.target.value)}
-                  className="glass-input w-full px-4 py-3 text-sm"
+                  onChange={(e) => setStationName(sanitizeInput(e.target.value, LIMITS.STATION_MAX))}
+                  className={`glass-input w-full px-4 py-3 text-sm ${getError("stationName") ? "!border-destructive" : ""}`}
                 />
+                {getError("stationName") && <p className="mt-1 text-xs text-destructive">{getError("stationName")}</p>}
               </motion.div>
             )}
           </motion.div>
