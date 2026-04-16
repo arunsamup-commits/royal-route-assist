@@ -150,7 +150,9 @@ export const bookingStore = {
   addBooking: (
     data: Omit<Booking, "id" | "otp" | "status" | "createdAt" | "needsAdminAttention" | "estimatedCost">
   ) => {
-    const otp = String(Math.floor(1000 + Math.random() * 9000));
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const otp = String(1000 + (array[0] % 9000));
     const booking: Booking = {
       ...data,
       id: crypto.randomUUID(),

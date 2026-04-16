@@ -210,7 +210,7 @@ function CoolieDashboard() {
                     <p className="flex items-center gap-1"><Navigation className="h-3 w-3" /> {booking.stationName || "Unknown"}</p>
                     <p className="capitalize">{booking.locationType} · {booking.scheduleType === "pre" ? "Pre-booked" : "Instant"}</p>
                     {booking.passengerMobile && (
-                      <p className="flex items-center gap-1"><Phone className="h-3 w-3" /> {booking.passengerMobile}</p>
+                      <p className="flex items-center gap-1"><Phone className="h-3 w-3" /> {booking.status === "assigned" && booking.assignedCoolieId === activeCoolieId ? booking.passengerMobile : `XXXX-${booking.passengerMobile.slice(-4)}`}</p>
                     )}
                   </div>
                 </div>

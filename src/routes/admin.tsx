@@ -45,6 +45,9 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState(false);
   const bookings = useBookings();
   const coolies = useCoolies();
   const applications = useCoolieApplications();
@@ -52,6 +55,46 @@ function AdminPage() {
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [coolieInput, setCoolieInput] = useState("");
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  const ADMIN_PIN = "7890";
+
+  if (!authenticated) {
+    return (
+      <div className="mx-auto max-w-md px-4 pt-20 pb-24">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/20">
+            <ShieldCheck className="h-7 w-7 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold gradient-text mb-2">Admin Access</h1>
+          <p className="text-sm text-muted-foreground mb-6">Enter the admin PIN to continue</p>
+          <GlassCard className="p-6">
+            <input
+              type="password"
+              maxLength={4}
+              value={pin}
+              onChange={(e) => { setPin(e.target.value); setPinError(false); }}
+              placeholder="Enter 4-digit PIN"
+              className="glass-input mb-3 w-full text-center text-2xl tracking-[0.5em]"
+            />
+            {pinError && <p className="text-xs text-destructive mb-3">Incorrect PIN. Try again.</p>}
+            <button
+              onClick={() => {
+                if (pin === ADMIN_PIN) {
+                  setAuthenticated(true);
+                } else {
+                  setPinError(true);
+                  setPin("");
+                }
+              }}
+              className="btn-primary-glow w-full py-2.5 text-sm font-semibold"
+            >
+              Unlock Admin Panel
+            </button>
+          </GlassCard>
+        </motion.div>
+      </div>
+    );
+  }
 
   const pendingCount = bookings.filter((b) => b.status === "pending").length;
   const attentionCount = bookings.filter((b) => b.needsAdminAttention).length;
