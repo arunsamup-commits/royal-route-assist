@@ -389,8 +389,11 @@ function CoolieOnboardingForm({ onBack }: { onBack: () => void }) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [bankPassbook, setBankPassbook] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [formErrors, setFormErrors] = useState<ValidationError[]>([]);
   const photoRef = useRef<HTMLInputElement>(null);
   const passbookRef = useRef<HTMLInputElement>(null);
+
+  const getError = (field: string) => formErrors.find((e) => e.field === field)?.message;
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -398,17 +401,23 @@ function CoolieOnboardingForm({ onBack }: { onBack: () => void }) {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      setFormErrors([{ field: "file", message: "File too large (max 5MB)" }]);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setter(reader.result as string);
     reader.readAsDataURL(file);
   };
 
   const handleSubmit = () => {
-    if (!name || !mobile || !station) return;
+    const errors = validateCoolieApplication({ name, mobile, station, experience });
+    setFormErrors(errors);
+    if (errors.length > 0) return;
     applicationStore.addApplication({
-      name,
-      mobile,
-      station,
+      name: name.trim(),
+      mobile: mobile.trim(),
+      station: station.trim(),
       experienceYears: Number(experience) || 0,
       availableFrom: availFrom,
       availableTo: availTo,
