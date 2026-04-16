@@ -168,9 +168,10 @@ function BookPage() {
                   type="text"
                   placeholder="Enter your name"
                   value={passengerName}
-                  onChange={(e) => setPassengerName(e.target.value)}
-                  className="glass-input w-full px-4 py-3 text-sm"
+                  onChange={(e) => setPassengerName(sanitizeInput(e.target.value, LIMITS.NAME_MAX))}
+                  className={`glass-input w-full px-4 py-3 text-sm ${getError("passengerName") ? "!border-destructive" : ""}`}
                 />
+                {getError("passengerName") && <p className="mt-1 text-xs text-destructive">{getError("passengerName")}</p>}
               </div>
               <div>
                 <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -180,10 +181,11 @@ function BookPage() {
                   type="tel"
                   placeholder="10-digit mobile number"
                   value={passengerMobile}
-                  onChange={(e) => setPassengerMobile(e.target.value)}
-                  className="glass-input w-full px-4 py-3 text-sm"
+                  onChange={(e) => setPassengerMobile(e.target.value.replace(/\D/g, "").slice(0, LIMITS.MOBILE_LENGTH))}
+                  className={`glass-input w-full px-4 py-3 text-sm ${getError("passengerMobile") ? "!border-destructive" : ""}`}
                   maxLength={10}
                 />
+                {getError("passengerMobile") && <p className="mt-1 text-xs text-destructive">{getError("passengerMobile")}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -194,9 +196,10 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. Rajdhani"
                     value={trainName}
-                    onChange={(e) => setTrainName(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setTrainName(sanitizeInput(e.target.value, LIMITS.TRAIN_NAME_MAX))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("trainName") ? "!border-destructive" : ""}`}
                   />
+                  {getError("trainName") && <p className="mt-1 text-xs text-destructive">{getError("trainName")}</p>}
                 </div>
                 <div>
                   <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -206,9 +209,10 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. 12301"
                     value={trainNumber}
-                    onChange={(e) => setTrainNumber(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setTrainNumber(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("trainNumber") ? "!border-destructive" : ""}`}
                   />
+                  {getError("trainNumber") && <p className="mt-1 text-xs text-destructive">{getError("trainNumber")}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -220,8 +224,8 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. B3"
                     value={coachNumber}
-                    onChange={(e) => setCoachNumber(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setCoachNumber(sanitizeInput(e.target.value, LIMITS.COACH_MAX))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("coachNumber") ? "!border-destructive" : ""}`}
                   />
                 </div>
                 <div>
@@ -232,8 +236,8 @@ function BookPage() {
                     type="text"
                     placeholder="e.g. 42"
                     value={seatNumber}
-                    onChange={(e) => setSeatNumber(e.target.value)}
-                    className="glass-input w-full px-4 py-3 text-sm"
+                    onChange={(e) => setSeatNumber(sanitizeInput(e.target.value, LIMITS.SEAT_MAX))}
+                    className={`glass-input w-full px-4 py-3 text-sm ${getError("seatNumber") ? "!border-destructive" : ""}`}
                   />
                 </div>
               </div>
