@@ -9,8 +9,7 @@ import {
   sanitizeInput,
   LIMITS,
   type ValidationError,
-} from "@/lib/validation";
-  Package,
+import {
   Camera,
   MapPin,
   Clock,
