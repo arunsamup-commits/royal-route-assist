@@ -4,6 +4,12 @@ import { useState, useRef } from "react";
 import { GlassCard } from "@/components/GlassCard";
 import { bookingStore } from "@/lib/booking-store";
 import {
+  validateBookingStep0,
+  validateBookingStep1,
+  sanitizeInput,
+  LIMITS,
+  type ValidationError,
+} from "@/lib/validation";
   Package,
   Camera,
   MapPin,
@@ -53,8 +59,24 @@ function BookPage() {
   const [seatNumber, setSeatNumber] = useState("");
   const [coachNumber, setCoachNumber] = useState("");
 
-  const next = () => setStep((s) => Math.min(s + 1, 4));
-  const prev = () => setStep((s) => Math.max(s - 1, 0));
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+
+  const getError = (field: string) => errors.find((e) => e.field === field)?.message;
+
+  const next = () => {
+    let stepErrors: ValidationError[] = [];
+    if (step === 0) {
+      stepErrors = validateBookingStep0({ passengerName, passengerMobile, trainName, trainNumber, coachNumber, seatNumber });
+    } else if (step === 1) {
+      stepErrors = validateBookingStep1({ locationType, stationName });
+    } else if (step === 3 && !scheduleType) {
+      stepErrors = [{ field: "scheduleType", message: "Select a schedule" }];
+    }
+    setErrors(stepErrors);
+    if (stepErrors.length > 0) return;
+    setStep((s) => Math.min(s + 1, 4));
+  };
+  const prev = () => { setErrors([]); setStep((s) => Math.max(s - 1, 0)); };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
