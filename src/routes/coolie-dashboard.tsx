@@ -466,26 +466,30 @@ function CoolieOnboardingForm({ onBack }: { onBack: () => void }) {
           <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
             <User className="h-3 w-3" /> Full Name *
           </label>
-          <input type="text" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} className="glass-input w-full px-4 py-3 text-sm" />
+          <input type="text" placeholder="Your full name" value={name} onChange={(e) => setName(sanitizeInput(e.target.value, LIMITS.NAME_MAX))} className={`glass-input w-full px-4 py-3 text-sm ${getError("name") ? "!border-destructive" : ""}`} />
+          {getError("name") && <p className="mt-1 text-xs text-destructive">{getError("name")}</p>}
         </div>
 
         <div>
           <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
             <Phone className="h-3 w-3" /> Mobile Number *
           </label>
-          <input type="tel" placeholder="10-digit mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} className="glass-input w-full px-4 py-3 text-sm" maxLength={10} />
+          <input type="tel" placeholder="10-digit mobile" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, LIMITS.MOBILE_LENGTH))} className={`glass-input w-full px-4 py-3 text-sm ${getError("mobile") ? "!border-destructive" : ""}`} maxLength={10} />
+          {getError("mobile") && <p className="mt-1 text-xs text-destructive">{getError("mobile")}</p>}
         </div>
 
         <div>
           <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
             <MapPin className="h-3 w-3" /> Station *
           </label>
-          <input type="text" placeholder="Which station will you work at?" value={station} onChange={(e) => setStation(e.target.value)} className="glass-input w-full px-4 py-3 text-sm" />
+          <input type="text" placeholder="Which station will you work at?" value={station} onChange={(e) => setStation(sanitizeInput(e.target.value, LIMITS.STATION_MAX))} className={`glass-input w-full px-4 py-3 text-sm ${getError("station") ? "!border-destructive" : ""}`} />
+          {getError("station") && <p className="mt-1 text-xs text-destructive">{getError("station")}</p>}
         </div>
 
         <div>
           <label className="mb-1 text-xs font-semibold text-muted-foreground">Years of Experience as Coolie</label>
-          <input type="number" placeholder="e.g. 5" value={experience} onChange={(e) => setExperience(e.target.value)} className="glass-input w-full px-4 py-3 text-sm" />
+          <input type="number" placeholder="e.g. 5" value={experience} onChange={(e) => setExperience(e.target.value.slice(0, 2))} min={0} max={50} className={`glass-input w-full px-4 py-3 text-sm ${getError("experience") ? "!border-destructive" : ""}`} />
+          {getError("experience") && <p className="mt-1 text-xs text-destructive">{getError("experience")}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
